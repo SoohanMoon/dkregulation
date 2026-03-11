@@ -301,7 +301,7 @@
       <p>
         <strong>연두보고과제</strong> : 2026년 연두보고 팀별 목표 과제
         {% if team_id != 'secretary' %}
-        <button type="button" class="year-link" id="yearObjectLink">(연두보고 참고)</button>
+        <button type="button" class="year-link" id="yearObjectLink">(참고)</button>
         {% endif %}
       </p>
       <p><strong>운영과제</strong> : 당해 팀 운영을 위해 수행하는 주요 과제</p>
@@ -329,7 +329,7 @@
   <!-- 연두보고 참고 모달 -->
   <div class="modal-overlay" id="yearObjectModal" role="dialog" aria-labelledby="yearObjectTitle">
     <div class="modal" style="max-width: 1100px;">
-      <div class="modal-header" id="yearObjectTitle">{{ team_name }} 연두보고 참고 과제</div>
+      <div class="modal-header" id="yearObjectTitle">{{ team_name }} 연두보고 과제 참고</div>
       <div class="modal-body" id="yearObjectBody">
         <p style="color:#64748b;">로딩 중...</p>
       </div>
