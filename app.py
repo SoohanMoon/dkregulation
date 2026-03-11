@@ -261,5 +261,14 @@ def api_admin_goals_download():
     )
 
 
+@app.route("/api/admin/goals/reset", methods=["POST"])
+def api_admin_goals_reset():
+    """관리자용 전체 목표 데이터 초기화"""
+    if not session.get("is_admin_authed"):
+        return jsonify({"success": False, "message": "인증이 필요합니다."}), 401
+    save_goals([])
+    return jsonify({"success": True, "message": "전체 목표 데이터가 초기화되었습니다."})
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

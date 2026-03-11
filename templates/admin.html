@@ -50,6 +50,21 @@
       font-weight: 600;
     }
     .download-btn:hover { background: #1d4ed8; }
+    .reset-btn {
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #b91c1c;
+      background: #fff1f2;
+      cursor: pointer;
+    }
+    .reset-btn:hover {
+      background: #ffe4e6;
+      border-color: #fca5a5;
+      color: #991b1b;
+    }
     .logout-btn {
       border: 1px solid #cbd5e1;
       border-radius: 8px;
@@ -109,6 +124,7 @@
 
     <div class="actions">
       <a class="download-btn" href="/api/admin/goals/download">엑셀 다운로드</a>
+      <button type="button" class="reset-btn" id="btnResetAll">전체 데이터 초기화</button>
       <form method="post" action="/admin/logout" style="margin:0;">
         <button type="submit" class="logout-btn">로그아웃</button>
       </form>
@@ -134,6 +150,7 @@
 
   <script>
     const goalRows = document.getElementById("goalRows");
+    const btnResetAll = document.getElementById("btnResetAll");
 
     function escapeHtml(s) {
       const div = document.createElement("div");
@@ -169,6 +186,28 @@
           goalRows.innerHTML = "<tr><td colspan='5' class='empty'>오류가 발생했습니다.</td></tr>";
         });
     }
+
+    btnResetAll.addEventListener("click", function() {
+      const ok = confirm("등록된 팀 목표 데이터를 전부 삭제할까요?");
+      if (!ok) return;
+      btnResetAll.disabled = true;
+      fetch("/api/admin/goals/reset", { method: "POST" })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message || "초기화되었습니다.");
+            loadGoals();
+          } else {
+            alert(data.message || "초기화에 실패했습니다.");
+          }
+        })
+        .catch(() => {
+          alert("초기화 중 오류가 발생했습니다.");
+        })
+        .finally(() => {
+          btnResetAll.disabled = false;
+        });
+    });
 
     loadGoals();
   </script>
