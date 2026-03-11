@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>동국홀딩스 2026 팀별 목표등록</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      background: linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 2rem;
+      color: #1e293b;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      text-align: center;
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .team-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .team-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.2rem;
+      min-height: 145px;
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 1.12rem;
+      font-weight: 600;
+      color: #334155;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .team-btn:hover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+      color: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+    .admin-area {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .admin-btn {
+      display: inline-block;
+      font-size: 0.78rem;
+      color: #64748b;
+      text-decoration: none;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 0.3rem 0.7rem;
+      background: rgba(255, 255, 255, 0.7);
+    }
+    .admin-btn:hover {
+      color: #334155;
+      border-color: #94a3b8;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>동국홀딩스 2026년 팀별 목표등록</h1>
+    <p class="subtitle">팀을 선택하세요</p>
+    <div class="team-grid">
+      {% for team in teams %}
+      <a href="{{ url_for('team_goal_page', team_id=team.id) }}" class="team-btn">{{ team.name }}</a>
+      {% endfor %}
+    </div>
+    <div class="admin-area">
+      <a href="{{ url_for('admin_page') }}" class="admin-btn">관리자</a>
+    </div>
+  </div>
+</body>
+</html>

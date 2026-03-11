@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ team_name }} - 목표등록</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      background: linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+      color: #1e293b;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back-link:hover { color: #3b82f6; }
+    h1 { font-size: 1.35rem; color: #0f172a; margin-bottom: 1.5rem; }
+    .info-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+    .info-box strong { color: #334155; }
+    .info-box p { margin: 0.4rem 0; }
+    .year-link {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 0.4rem;
+      color: #1d4ed8;
+      font-size: 0.82rem;
+      cursor: pointer;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 0.1rem 0.55rem;
+      font-family: inherit;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .year-link:hover {
+      background: #dbeafe;
+      border-color: #93c5fd;
+      color: #1e40af;
+    }
+    .goal-block {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .goal-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    .goal-remove {
+      border: none;
+      background: #fee2e2;
+      color: #b91c1c;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      line-height: 1;
+      padding: 0;
+      font-weight: 700;
+    }
+    .goal-remove:hover {
+      background: #fecaca;
+      color: #991b1b;
+    }
+    .goal-block .form-group { margin-bottom: 1.25rem; }
+    .goal-block .form-group:last-of-type { margin-bottom: 0; }
+    .goal-fields {
+      display: grid;
+      grid-template-columns: 220px 320px minmax(360px, 1fr) 280px;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .goal-fields { grid-template-columns: 1fr; }
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 0.4rem;
+      font-size: 0.9rem;
+    }
+    .form-group input[type="text"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+    }
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .person-trigger {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 0.95rem;
+      text-align: left;
+      cursor: pointer;
+      color: #64748b;
+    }
+    .person-trigger:hover { border-color: #94a3b8; color: #334155; }
+    .person-trigger.has-value { color: #1e293b; }
+    .btn-add {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-add:hover {
+      background: #e2e8f0;
+      border-color: #94a3b8;
+      color: #334155;
+    }
+    .btn-save {
+      width: 100%;
+      padding: 0.9rem;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-save:hover { background: #1d4ed8; }
+    .btn-save:disabled { background: #94a3b8; cursor: not-allowed; }
+    /* 모달 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 100%;
+      max-height: 80vh;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .modal-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .modal-body {
+      padding: 1rem 1.25rem;
+      overflow-y: auto;
+      max-height: 50vh;
+    }
+    .member-item {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      gap: 0.5rem;
+    }
+    .member-item:hover { background: #f8fafc; }
+    .member-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .member-item span { flex: 1; }
+    .member-item .jikwi { font-size: 0.85rem; color: #64748b; }
+    .modal-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #e2e8f0;
+      text-align: right;
+    }
+    .modal-footer button {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-close {
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .btn-close:hover { background: #cbd5e1; }
+    .btn-confirm {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-confirm:hover { background: #1d4ed8; }
+    .year-table-wrap {
+      overflow-x: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .year-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 640px;
+      font-size: 0.88rem;
+    }
+    .year-table th, .year-table td {
+      border-bottom: 1px solid #f1f5f9;
+      padding: 0.55rem 0.6rem;
+      text-align: left;
+      vertical-align: top;
+      color: #334155;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .year-table thead th {
+      background: #f8fafc;
+      color: #0f172a;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      color: #fff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      z-index: 200;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">← 팀 선택으로 돌아가기</a>
+    <h1>{{ team_name }} 목표 등록</h1>
+
+    <div class="info-box">
+      <p><strong>목표 구분 안내</strong></p>
+      <p>
+        <strong>연두보고과제</strong> : 2026년 연두보고 팀별 목표 과제
+        {% if team_id != 'secretary' %}
+        <button type="button" class="year-link" id="yearObjectLink">(연두보고 참고)</button>
+        {% endif %}
+      </p>
+      <p><strong>운영과제</strong> : 당해 팀 운영을 위해 수행하는 주요 과제</p>
+    </div>
+
+    <div id="goalList"></div>
+
+    <button type="button" class="btn-add" id="btnAddGoal">+ 목표 추가</button>
+    <button type="button" class="btn-save" id="btnSave">저장</button>
+  </div>
+
+  <!-- 담당자 선택 모달 -->
+  <div class="modal-overlay" id="personModal" role="dialog" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-header" id="modalTitle">팀원 선택 (복수 선택 가능)</div>
+      <div class="modal-body" id="modalBody">
+        <p style="color:#64748b;">로딩 중...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-confirm" id="modalConfirm">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 연두보고 참고 모달 -->
+  <div class="modal-overlay" id="yearObjectModal" role="dialog" aria-labelledby="yearObjectTitle">
+    <div class="modal" style="max-width: 1100px;">
+      <div class="modal-header" id="yearObjectTitle">{{ team_name }} 연두보고 참고 과제</div>
+      <div class="modal-body" id="yearObjectBody">
+        <p style="color:#64748b;">로딩 중...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-close" id="yearObjectClose">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const teamId = "{{ team_id }}";
+    const teamName = "{{ team_name }}";
+    let goalBlocks = [];  // [{ goal_type, task_name, task_description, persons }, ...]
+    let blockIndexForModal = 0;
+
+    const goalList = document.getElementById("goalList");
+    const personModal = document.getElementById("personModal");
+    const modalBody = document.getElementById("modalBody");
+    const modalConfirm = document.getElementById("modalConfirm");
+    const yearObjectLink = document.getElementById("yearObjectLink");
+    const yearObjectModal = document.getElementById("yearObjectModal");
+    const yearObjectBody = document.getElementById("yearObjectBody");
+    const yearObjectClose = document.getElementById("yearObjectClose");
+
+    function escapeHtml(s) {
+      const div = document.createElement("div");
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function renderBlock(index, data) {
+      const d = data || {};
+      const persons = d.persons || [];
+      const personLabel = persons.length === 0
+        ? "담당자를 선택하세요 (클릭)"
+        : persons.map(p => p.name).join(", ");
+      const block = document.createElement("div");
+      block.className = "goal-block";
+      block.dataset.index = index;
+      block.innerHTML = `
+        <div class="goal-block-header">
+          <span>목표 ${index + 1}</span>
+          <button type="button" class="goal-remove" data-index="${index}" aria-label="목표 삭제">×</button>
+        </div>
+        <div class="goal-fields">
+          <div class="form-group">
+            <label>목표 구분</label>
+            <select class="goal-type" data-index="${index}">
+              <option value="">선택하세요</option>
+              <option value="연두보고과제" ${d.goal_type === "연두보고과제" ? "selected" : ""}>연두보고과제</option>
+              <option value="운영과제" ${d.goal_type === "운영과제" ? "selected" : ""}>운영과제</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>과제명</label>
+            <input type="text" class="task-name" data-index="${index}" placeholder="과제명을 입력하세요" value="${escapeHtml(d.task_name || "")}">
+          </div>
+          <div class="form-group">
+            <label>과제 설명</label>
+            <textarea class="task-description" data-index="${index}" placeholder="과제 설명을 입력하세요">${escapeHtml(d.task_description || "")}</textarea>
+          </div>
+          <div class="form-group">
+            <label>담당자</label>
+            <button type="button" class="person-trigger ${persons.length ? "has-value" : ""}" data-index="${index}" aria-label="담당자 선택">${escapeHtml(personLabel)}</button>
+          </div>
+        </div>
+      `;
+      block.querySelector(".person-trigger").addEventListener("click", function() {
+        blockIndexForModal = parseInt(this.dataset.index, 10);
+        openPersonModal();
+      });
+      block.querySelector(".goal-remove").addEventListener("click", function() {
+        removeGoal(parseInt(this.dataset.index, 10));
+      });
+      return block;
+    }
+
+    function syncBlocksFromDom() {
+      const oldBlocks = goalBlocks.slice();
+      goalBlocks = [];
+      goalList.querySelectorAll(".goal-block").forEach((block, i) => {
+        goalBlocks.push({
+          goal_type: block.querySelector(".goal-type").value,
+          task_name: (block.querySelector(".task-name").value || "").trim(),
+          task_description: (block.querySelector(".task-description").value || "").trim(),
+          persons: (oldBlocks[i] && Array.isArray(oldBlocks[i].persons)) ? oldBlocks[i].persons : []
+        });
+      });
+    }
+
+    function syncPersonsToBlock(index, persons) {
+      if (goalBlocks[index] === undefined) goalBlocks[index] = { goal_type: "", task_name: "", task_description: "", persons: [] };
+      goalBlocks[index].persons = persons;
+    }
+
+    function renderAll() {
+      goalList.innerHTML = "";
+      goalBlocks.forEach((data, i) => {
+        goalList.appendChild(renderBlock(i, data));
+      });
+    }
+
+    function addGoal() {
+      if (goalList.querySelectorAll(".goal-block").length > 0) {
+        syncBlocksFromDom();
+      }
+      goalBlocks.push({ goal_type: "", task_name: "", task_description: "", persons: [] });
+      renderAll();
+    }
+
+    function removeGoal(index) {
+      syncBlocksFromDom();
+      goalBlocks.splice(index, 1);
+      if (goalBlocks.length === 0) {
+        goalBlocks.push({ goal_type: "", task_name: "", task_description: "", persons: [] });
+      }
+      renderAll();
+    }
+
+    function openPersonModal() {
+      personModal.classList.add("open");
+      const current = goalBlocks[blockIndexForModal];
+      const selected = (current && current.persons) ? current.persons : [];
+
+      fetch("/api/team/" + encodeURIComponent(teamId) + "/members")
+        .then(r => r.json())
+        .then(members => {
+          modalBody.innerHTML = "";
+          if (members.length === 0) {
+            modalBody.innerHTML = "<p style='color:#64748b'>등록된 팀원이 없습니다.</p>";
+            return;
+          }
+          members.forEach(m => {
+            const label = document.createElement("label");
+            label.className = "member-item";
+            const checked = selected.some(p => p.name === m.name && p.jikwi === m.jikwi);
+            label.innerHTML = `
+              <input type="checkbox" data-name="${escapeHtml(m.name)}" data-jikwi="${escapeHtml(m.jikwi)}" ${checked ? "checked" : ""}>
+              <span>${escapeHtml(m.name)} <span class="jikwi">${escapeHtml(m.jikwi)}</span></span>
+            `;
+            modalBody.appendChild(label);
+          });
+        })
+        .catch(() => {
+          modalBody.innerHTML = "<p style='color:#dc2626'>팀원 목록을 불러올 수 없습니다.</p>";
+        });
+    }
+
+    function closePersonModal() {
+      const checkboxes = modalBody.querySelectorAll('input[type="checkbox"]:checked');
+      const persons = Array.from(checkboxes).map(cb => ({
+        name: cb.dataset.name,
+        jikwi: cb.dataset.jikwi
+      }));
+      syncPersonsToBlock(blockIndexForModal, persons);
+      const blockEl = goalList.querySelector(".goal-block[data-index=\"" + blockIndexForModal + "\"]");
+      if (blockEl) {
+        const trigger = blockEl.querySelector(".person-trigger");
+        trigger.textContent = persons.length === 0 ? "담당자를 선택하세요 (클릭)" : persons.map(p => p.name).join(", ");
+        trigger.classList.toggle("has-value", persons.length > 0);
+      }
+      personModal.classList.remove("open");
+    }
+
+    modalConfirm.addEventListener("click", closePersonModal);
+    personModal.addEventListener("click", function(e) {
+      if (e.target === personModal) closePersonModal();
+    });
+    if (yearObjectLink) {
+      yearObjectLink.addEventListener("click", openYearObjectModal);
+    }
+    yearObjectClose.addEventListener("click", closeYearObjectModal);
+    yearObjectModal.addEventListener("click", function(e) {
+      if (e.target === yearObjectModal) closeYearObjectModal();
+    });
+
+    document.getElementById("btnAddGoal").addEventListener("click", addGoal);
+
+    document.getElementById("btnSave").addEventListener("click", function() {
+      syncBlocksFromDom();
+      const valid = goalBlocks.filter(g => g.goal_type && g.task_name.trim());
+      if (valid.length === 0) {
+        showToast("목표 구분과 과제명을 입력한 목표가 최소 1개 필요합니다.", true);
+        return;
+      }
+      const btnSave = document.getElementById("btnSave");
+      btnSave.disabled = true;
+      fetch("/api/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          team_id: teamId,
+          team_name: teamName,
+          goals: valid
+        })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            showToast(data.message || "저장되었습니다.");
+          } else {
+            showToast(data.message || "저장에 실패했습니다.", true);
+          }
+        })
+        .catch(() => {
+          showToast("저장 중 오류가 발생했습니다.", true);
+        })
+        .finally(() => { btnSave.disabled = false; });
+    });
+
+    function showToast(message, isError) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.background = isError ? "#dc2626" : "#0f172a";
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    function openYearObjectModal() {
+      yearObjectModal.classList.add("open");
+      yearObjectBody.innerHTML = "<p style='color:#64748b;'>로딩 중...</p>";
+      fetch("/api/team/" + encodeURIComponent(teamId) + "/year-objects")
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) {
+            yearObjectBody.innerHTML = "<p style='color:#dc2626;'>" + escapeHtml(data.message || "참고 과제를 불러올 수 없습니다.") + "</p>";
+            return;
+          }
+          const rows = data.rows || [];
+          if (rows.length === 0) {
+            yearObjectBody.innerHTML = "<p style='color:#64748b;'>등록된 참고 과제가 없습니다.</p>";
+            return;
+          }
+          const hasSmall = rows.some(r => (r["소분류"] || "").trim() !== "");
+          const grouped = groupRows(rows);
+          let html = "<div class='year-table-wrap'><table class='year-table'><thead><tr>";
+          html += "<th>대분류</th><th>중분류</th>";
+          if (hasSmall) html += "<th>소분류</th>";
+          html += "</tr></thead><tbody>";
+          grouped.forEach(big => {
+            big.middle.forEach(mid => {
+              const smalls = mid.small.length > 0 ? mid.small : [""];
+              smalls.forEach((small, si) => {
+                html += "<tr>";
+                if (mid.renderBig && si === 0) {
+                  html += "<td rowspan='" + mid.bigRowSpan + "'>" + escapeHtml(big.big) + "</td>";
+                }
+                if (si === 0) {
+                  html += "<td rowspan='" + smalls.length + "'>" + escapeHtml(mid.mid) + "</td>";
+                }
+                if (hasSmall) {
+                  html += "<td>" + escapeHtml(small) + "</td>";
+                }
+                html += "</tr>";
+              });
+            });
+          });
+          html += "</tbody></table></div>";
+          yearObjectBody.innerHTML = html;
+        })
+        .catch(() => {
+          yearObjectBody.innerHTML = "<p style='color:#dc2626;'>참고 과제를 불러오는 중 오류가 발생했습니다.</p>";
+        });
+    }
+
+    function closeYearObjectModal() {
+      yearObjectModal.classList.remove("open");
+    }
+
+    function groupRows(rows) {
+      const result = [];
+      const bigMap = new Map();
+      rows.forEach(r => {
+        const big = (r["대분류"] || "").trim();
+        const mid = (r["중분류"] || "").trim();
+        const small = (r["소분류"] || "").trim();
+        const bigKey = big || "(없음)";
+        const midKey = mid || "(없음)";
+        if (!bigMap.has(bigKey)) {
+          bigMap.set(bigKey, { big: big, middle: [], midMap: new Map() });
+          result.push(bigMap.get(bigKey));
+        }
+        const bigObj = bigMap.get(bigKey);
+        if (!bigObj.midMap.has(midKey)) {
+          const m = { mid: mid, small: [], smallSet: new Set(), renderBig: false, bigRowSpan: 0 };
+          bigObj.midMap.set(midKey, m);
+          bigObj.middle.push(m);
+        }
+        const midObj = bigObj.midMap.get(midKey);
+        if (!midObj.smallSet.has(small)) {
+          midObj.smallSet.add(small);
+          midObj.small.push(small);
+        }
+      });
+
+      result.forEach(big => {
+        let span = 0;
+        big.middle.forEach(mid => { span += Math.max(mid.small.length, 1); });
+        if (big.middle.length > 0) {
+          big.middle[0].renderBig = true;
+          big.middle[0].bigRowSpan = span;
+        }
+        delete big.midMap;
+        big.middle.forEach(mid => delete mid.smallSet);
+      });
+      return result;
+    }
+
+    function loadSavedGoals() {
+      fetch("/api/team/" + encodeURIComponent(teamId) + "/goals")
+        .then(r => r.json())
+        .then(goals => {
+          if (goals && goals.length > 0) {
+            goalBlocks = goals.map(g => ({
+              goal_type: g.goal_type || "",
+              task_name: g.task_name || "",
+              task_description: g.task_description || "",
+              persons: g.persons || []
+            }));
+          }
+          if (goalBlocks.length === 0) {
+            addGoal();
+          } else {
+            renderAll();
+          }
+        })
+        .catch(() => addGoal());
+    }
+
+    loadSavedGoals();
+  </script>
+</body>
+</html>

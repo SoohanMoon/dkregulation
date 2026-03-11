@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 - 팀 목표 등록 현황</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+      background: linear-gradient(160deg, #f0f4f8 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+      color: #1e293b;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .back-link {
+      color: #64748b;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back-link:hover { color: #3b82f6; }
+    h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #0f172a;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .download-btn {
+      display: inline-block;
+      text-decoration: none;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .download-btn:hover { background: #1d4ed8; }
+    .logout-btn {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #475569;
+      background: #fff;
+      cursor: pointer;
+    }
+    .logout-btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #334155;
+    }
+    .table-wrap {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: auto;
+      background: #fff;
+      max-height: 75vh;
+    }
+    table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      color: #0f172a;
+      z-index: 1;
+    }
+    th, td {
+      border-bottom: 1px solid #f1f5f9;
+      padding: 0.6rem 0.65rem;
+      text-align: left;
+      vertical-align: top;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .empty {
+      padding: 1.2rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <a href="/" class="back-link">← 메인으로 돌아가기</a>
+      <h1>관리자 - 팀 목표 등록 현황</h1>
+      <div></div>
+    </div>
+
+    <div class="actions">
+      <a class="download-btn" href="/api/admin/goals/download">엑셀 다운로드</a>
+      <form method="post" action="/admin/logout" style="margin:0;">
+        <button type="submit" class="logout-btn">로그아웃</button>
+      </form>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 130px;">팀</th>
+            <th style="width: 130px;">목표구분</th>
+            <th style="width: 220px;">과제명</th>
+            <th>과제설명</th>
+            <th style="width: 260px;">담당자</th>
+          </tr>
+        </thead>
+        <tbody id="goalRows">
+          <tr><td colspan="5" class="empty">로딩 중...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const goalRows = document.getElementById("goalRows");
+
+    function escapeHtml(s) {
+      const div = document.createElement("div");
+      div.textContent = s || "";
+      return div.innerHTML;
+    }
+
+    function loadGoals() {
+      fetch("/api/admin/goals")
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) {
+            goalRows.innerHTML = "<tr><td colspan='5' class='empty'>데이터를 불러오지 못했습니다.</td></tr>";
+            return;
+          }
+          const rows = data.rows || [];
+          if (rows.length === 0) {
+            goalRows.innerHTML = "<tr><td colspan='5' class='empty'>등록된 목표 데이터가 없습니다.</td></tr>";
+            return;
+          }
+          goalRows.innerHTML = "";
+          rows.forEach(r => {
+            goalRows.innerHTML += "<tr>"
+              + "<td>" + escapeHtml(r.team_name) + "</td>"
+              + "<td>" + escapeHtml(r.goal_type) + "</td>"
+              + "<td>" + escapeHtml(r.task_name) + "</td>"
+              + "<td>" + escapeHtml(r.task_description) + "</td>"
+              + "<td>" + escapeHtml(r.persons_text) + "</td>"
+              + "</tr>";
+          });
+        })
+        .catch(() => {
+          goalRows.innerHTML = "<tr><td colspan='5' class='empty'>오류가 발생했습니다.</td></tr>";
+        });
+    }
+
+    loadGoals();
+  </script>
+</body>
+</html>

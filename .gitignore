@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Local runtime data
+goals.json
+
+# Local downloaded tools
+railway-cli/
+railway.zip
+
+# OS/editor
+.DS_Store
+Thumbs.db
+~$*.xlsx
