@@ -35,17 +35,53 @@
     }
     .info-box strong { color: #334155; }
     .info-box p { margin: 0.4rem 0; }
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 0.9rem;
+      margin-top: 0.6rem;
+    }
+    @media (max-width: 1200px) {
+      .guide-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+    }
+    @media (max-width: 700px) {
+      .guide-grid { grid-template-columns: 1fr; }
+    }
+    .guide-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 0.7rem 0.75rem;
+    }
+    .guide-card-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 0.45rem;
+    }
+    .guide-card p {
+      margin: 0.22rem 0;
+      font-size: 0.82rem;
+      color: #475569;
+      line-height: 1.35;
+    }
+    .guide-ref-line {
+      display: flex;
+      align-items: center;
+      gap: 0.12rem;
+      white-space: nowrap;
+    }
     .year-link {
       display: inline-flex;
       align-items: center;
-      margin-left: 0.4rem;
+      margin-left: 0;
       color: #1d4ed8;
-      font-size: 0.82rem;
+      font-size: 0.75rem;
       cursor: pointer;
       background: #eff6ff;
       border: 1px solid #bfdbfe;
       border-radius: 999px;
-      padding: 0.1rem 0.55rem;
+      padding: 0.08rem 0.45rem;
       font-family: inherit;
       font-weight: 600;
       line-height: 1.2;
@@ -297,14 +333,34 @@
     <h1>{{ team_name }} 목표 등록</h1>
 
     <div class="info-box">
-      <p><strong>목표 구분 안내</strong></p>
-      <p>
-        <strong>연두보고과제</strong> : 2026년 연두보고 팀별 목표 과제
-        {% if team_id != 'secretary' %}
-        <button type="button" class="year-link" id="yearObjectLink">(참고)</button>
-        {% endif %}
-      </p>
-      <p><strong>운영과제</strong> : 당해 팀 운영을 위해 수행하는 주요 과제</p>
+      <p><strong>목표 등록 Guide</strong></p>
+      <div class="guide-grid">
+        <div class="guide-card">
+          <div class="guide-card-title">1. 목표 구분 선택</div>
+          <p>연두보고과제/운영과제 구분하여 선택</p>
+          <p class="guide-ref-line">
+            <span>- 연두보고과제 : '26년 연두보고 팀별 과제</span>
+            {% if team_id != 'secretary' %}
+            <button type="button" class="year-link" id="yearObjectLink">(참고)</button>
+            {% endif %}
+          </p>
+          <p>- 운영과제 : 팀 운영을 위해 수행하는 주요 과제</p>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">2. 과제명 작성</div>
+          <p>한 줄로 핵심 과제명을 입력하세요.</p>
+          <p>(예: 2026 중기전략 수립)</p>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">3. 과제 설명 작성</div>
+          <p>과제 내용을 구체적으로 입력하세요.</p>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title">4. 담당자 선택</div>
+          <p>클릭 후 팀원을 선택하세요.</p>
+          <p>(복수 선택 가능)</p>
+        </div>
+      </div>
     </div>
 
     <div id="goalList"></div>
