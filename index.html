@@ -477,7 +477,7 @@
             initSearch();
         });
 
-        // 0. Search logic
+        // 0. Search logic (기반 정적 JSON 로컬 검색)
         function initSearch() {
             const searchInput = document.getElementById('global-search-input');
             const overlay = document.getElementById('search-results-overlay');
@@ -498,13 +498,38 @@
                     resultsBody.innerHTML = '<div class="loading"><div class="spinner"></div><p style="font-weight: 500; font-size: 1.1rem;">모든 사규를 검색하는 중입니다...</p></div>';
                     searchTitle.textContent = `'${query}' 검색 결과`;
 
-                    fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                    fetch('search_index.json')
                         .then(res => res.json())
                         .then(data => {
-                            if (data.error) throw new Error(data.error);
-                            
                             resultsBody.innerHTML = '';
-                            const results = data.results || [];
+                            const queryLower = query.toLowerCase();
+                            const results = [];
+                            
+                            // 로컬 검색 알고리즘 구현
+                            Object.entries(data.content_map || {}).forEach(([filename, content]) => {
+                                const contentLower = content.toLowerCase();
+                                const matches = [];
+                                let startIdx = 0;
+                                
+                                while (true) {
+                                    const idx = contentLower.indexOf(queryLower, startIdx);
+                                    if (idx === -1 || matches.length >= 3) break;
+                                    
+                                    const snippetStart = Math.max(0, idx - 40);
+                                    const snippetEnd = Math.min(content.length, idx + query.length + 40);
+                                    
+                                    let snippet = content.substring(snippetStart, snippetEnd);
+                                    if (snippetStart > 0) snippet = "..." + snippet;
+                                    if (snippetEnd < content.length) snippet = snippet + "...";
+                                    
+                                    matches.push(snippet);
+                                    startIdx = idx + query.length;
+                                }
+                                
+                                if (matches.length > 0) {
+                                    results.push({ filename, matches });
+                                }
+                            });
                             
                             if (results.length === 0) {
                                 resultsBody.innerHTML = `
@@ -573,7 +598,7 @@
             const listContainer = document.getElementById('file-list');
             listContainer.innerHTML = '<div style="padding: 30px; text-align: center; color: #94a3b8;">목록을 불러오는 중...</div>';
 
-            fetch('/api/list')
+            fetch('search_index.json')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
@@ -652,8 +677,8 @@
                 `;
                 documentView.style.opacity = '1';
 
-                // 파일 Stream Fetch
-                fetch(`/api/view/${encodeURIComponent(filename)}`)
+                // 정적 파일 패치
+                fetch(`company-regulation/${encodeURIComponent(filename)}`)
                     .then(response => {
                         if (!response.ok) throw new Error("파일을 불러오지 못했습니다.");
                         return response.arrayBuffer(); // DOCX는 바이너리 데이터
