@@ -231,6 +231,17 @@
             color: #0f172a;
         }
 
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 2em 0;
+        }
+
+        .table-scroll .document-table {
+            margin: 0;
+        }
+
         /* States */
         .loading {
             display: flex;
@@ -489,6 +500,76 @@
             font-weight: bold;
             padding: 0 2px;
             border-radius: 2px;
+        }
+
+        /* Mobile Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 30vh; /* 화면 상단 1/3을 스크롤 가능한 메뉴로 */
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+
+            .main-content {
+                height: 70vh; /* 나머지 영역을 뷰어로 */
+            }
+
+            .top-bar {
+                padding: 0 20px;
+                height: 60px;
+            }
+            
+            .top-bar h2 {
+                font-size: 1.1rem;
+            }
+
+            .viewer-container {
+                padding: 15px; /* 모바일에서 바깥 여백 대폭 축소 */
+            }
+
+            .document-paper {
+                padding: 30px 15px; /* 내부 여백 극도로 축소 */
+                font-size: 0.95rem; /* 글자 크기 약간 축소 */
+                overflow-wrap: break-word; /* 긴 단어 강제 줄바꿈 */
+                word-wrap: break-word;
+                word-break: keep-all;
+            }
+
+            .document-paper p,
+            .document-paper li,
+            .document-paper td,
+            .document-paper th {
+                word-break: keep-all;
+                overflow-wrap: break-word;
+            }
+
+            .document-paper h1 { font-size: 1.6rem; }
+            .document-paper h2 { font-size: 1.3rem; }
+            .document-paper h3 { font-size: 1.1rem; }
+
+            /* 표를 위한 가로형 스크롤 */
+            .document-paper table {
+                width: 100%;
+                min-width: 560px;
+                white-space: normal;
+            }
+
+            .document-paper th,
+            .document-paper td {
+                white-space: normal;
+            }
+            
+            .search-results-overlay {
+                padding: 20px 15px;
+            }
+            
+            .gate-box {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
@@ -832,6 +913,22 @@
         }
 
         // 3. 문서를 서버에서 다운받아 HTML로 렌더링
+        function wrapTablesForMobile(viewRoot) {
+            const tables = viewRoot.querySelectorAll('table');
+            tables.forEach((table) => {
+                if (table.parentElement && table.parentElement.classList.contains('table-scroll')) {
+                    return;
+                }
+
+                table.classList.add('document-table');
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-scroll';
+
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
+
         function loadDocument(filename, displayName) {
             const documentView = document.getElementById('document-view');
             const titleEl = document.getElementById('current-title');
@@ -873,6 +970,7 @@
                         setTimeout(() => {
                             // 변환된 HTML 화면에 삽입
                             documentView.innerHTML = result.value;
+                            wrapTablesForMobile(documentView);
                             documentView.style.opacity = '1';
                             
                             if (result.messages.length > 0) {
