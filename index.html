@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow, noarchive"> <!-- 검색엔진 스크랩 방지 -->
     <title>사규 열람 서비스</title>
     <!-- 구글 폰트 적용 (Inter, Noto Sans KR) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -33,6 +34,11 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            /* 텍스트 드래그 및 선택 방지 */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         /* Sidebar - Glassmorphism touch */
@@ -475,7 +481,36 @@
         document.addEventListener('DOMContentLoaded', () => {
             fetchFileList();
             initSearch();
+            initSecurity(); // 보안 로직 실행
         });
+
+        // 보안 로직 (우클릭, 복사, 드래그 방지)
+        function initSecurity() {
+            // 우클릭 메뉴 방지
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            
+            // 드래그 앤 드롭 방지
+            document.addEventListener('dragstart', e => e.preventDefault());
+            
+            // 단축키 (개발자도구, 복사, 소스보기 등) 방지
+            document.addEventListener('keydown', e => {
+                // F12 (개발자 도구)
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl 또는 Cmd 누른 상태의 단축키 방지
+                if (e.ctrlKey || e.metaKey) {
+                    const key = String(e.key).toLowerCase();
+                    // c(복사), a(전체선택), s(저장), p(인쇄), u(소스보기)
+                    if (['c', 'a', 's', 'p', 'u'].includes(key)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            });
+        }
 
         // 0. Search logic (기반 정적 JSON 로컬 검색)
         function initSearch() {
