@@ -34,11 +34,6 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-            /* 텍스트 드래그 및 선택 방지 */
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
         }
 
         /* Sidebar - Glassmorphism touch */
@@ -770,13 +765,10 @@
 
         // 보안 로직 (우클릭, 복사, 드래그 방지)
         function initSecurity() {
-            // 우클릭 메뉴 방지
-            document.addEventListener('contextmenu', e => e.preventDefault());
-            
             // 드래그 앤 드롭 방지
             document.addEventListener('dragstart', e => e.preventDefault());
             
-            // 단축키 (개발자도구, 복사, 소스보기 등) 방지
+            // 단축키 (개발자도구, 소스보기 등) 방지
             document.addEventListener('keydown', e => {
                 // F12 (개발자 도구)
                 if (e.key === 'F12') {
@@ -787,8 +779,8 @@
                 // Ctrl 또는 Cmd 누른 상태의 단축키 방지
                 if (e.ctrlKey || e.metaKey) {
                     const key = String(e.key).toLowerCase();
-                    // c(복사), a(전체선택), s(저장), p(인쇄), u(소스보기)
-                    if (['c', 'a', 's', 'p', 'u'].includes(key)) {
+                    // a(전체선택), s(저장), p(인쇄), u(소스보기)
+                    if (['a', 's', 'p', 'u'].includes(key)) {
                         e.preventDefault();
                         return false;
                     }
