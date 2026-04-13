@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /
+
+# Some crawlers still read this extension.
+Noindex: /
