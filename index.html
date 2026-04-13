@@ -303,6 +303,91 @@
             color: #0f172a;
         }
 
+        /* Password Gate CSS */
+        #password-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.4s ease;
+        }
+        .gate-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 50px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+        .gate-box svg {
+            width: 60px;
+            height: 60px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .gate-box h2 {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .gate-box p {
+            color: #94a3b8;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .gate-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .gate-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            text-align: center;
+        }
+        .gate-input:focus {
+            border-color: var(--primary-color);
+        }
+        .gate-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .gate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+        .gate-error {
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            display: none;
+        }
+
         /* Search CSS */
         .search-box {
             padding: 15px 25px;
@@ -409,6 +494,23 @@
 </head>
 <body>
 
+    <!-- 패스워드 방어막 -->
+    <div id="password-gate">
+        <div class="gate-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <h2>보안 영역</h2>
+            <p>사규 열람 서비스는 인가된 사용자만 접속할 수 있습니다.<br>비밀번호를 입력해주세요.</p>
+            <div class="gate-input-group">
+                <input type="password" id="gate-password" class="gate-input" placeholder="비밀번호" autocomplete="off">
+                <button id="gate-submit" class="gate-btn">접속하기</button>
+            </div>
+            <div id="gate-error-message" class="gate-error">비밀번호가 일치하지 않습니다.</div>
+        </div>
+    </div>
+
     <!-- 왼쪽 사이드바 -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -479,10 +581,52 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            fetchFileList();
-            initSearch();
-            initSecurity(); // 보안 로직 실행
+            initSecurity(); // 보안 로직 실행 (F12, 우클릭 방지)
+            initPasswordGate(); // 패스워드 로직
         });
+
+        function initPasswordGate() {
+            const gate = document.getElementById('password-gate');
+            const passInput = document.getElementById('gate-password');
+            const passBtn = document.getElementById('gate-submit');
+            const errorMsg = document.getElementById('gate-error-message');
+            
+            // ⚠️ 임시 접속 비밀번호 설정 (필요 시 아래 "1234" 부분을 변경하세요)
+            const CORRECT_PASSWORD = "dk!";
+
+            // 세션 스토리지에서 이미 인증되었는지 확인 (탭 닫기 전까지 유지)
+            if (sessionStorage.getItem('auth_reg') === 'true') {
+                gate.style.display = 'none';
+                fetchFileList();
+                initSearch();
+                return;
+            }
+
+            // 인증 전까지 다른 모든 상호작용 차단
+            passInput.focus();
+
+            function attemptLogin() {
+                if (passInput.value === CORRECT_PASSWORD) {
+                    sessionStorage.setItem('auth_reg', 'true');
+                    gate.style.opacity = '0';
+                    setTimeout(() => {
+                        gate.style.display = 'none';
+                        // 인증 성공 후 메인 화면 진입 시에 데이터 로딩 시작
+                        fetchFileList();
+                        initSearch();
+                    }, 400);
+                } else {
+                    errorMsg.style.display = 'block';
+                    passInput.value = '';
+                    passInput.focus();
+                }
+            }
+
+            passBtn.addEventListener('click', attemptLogin);
+            passInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') attemptLogin();
+            });
+        }
 
         // 보안 로직 (우클릭, 복사, 드래그 방지)
         function initSecurity() {
