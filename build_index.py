@@ -10,11 +10,13 @@ REGULATION_DIR = os.path.join(BASE_DIR, "company-regulation")
 OUTPUT_FILE = os.path.join(BASE_DIR, "search_index.json")
 
 def sort_key(filename):
-    """파일명의 숫자 접두어를 기준으로 정렬하기 위한 함수"""
-    match = re.match(r'^(\d+)', filename)
+    """파일명의 숫자 접두어(예: 13, 13-2)를 기준으로 정렬"""
+    match = re.match(r'^(\d+)(?:-(\d+))?', filename)
     if match:
-        return int(match.group(1))
-    return float('inf')
+        major = int(match.group(1))
+        minor = int(match.group(2)) if match.group(2) else 0
+        return (major, minor, filename)
+    return (float('inf'), float('inf'), filename)
 
 def extract_text_from_docx(file_path):
     """DOCX 파일 내의 텍스트를 파싱하여 문자열로 반환 (내장 zipfile 지원)"""
