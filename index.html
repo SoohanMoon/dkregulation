@@ -857,7 +857,7 @@
                             const regex = new RegExp(`(${escapeRegExp(query)})`, 'gi');
                             
                             results.forEach(res => {
-                                const displayName = res.filename.replace(/\.(docx|pdf)$/i, '');
+                                const displayName = res.filename.replace(/\.(docx|pdf|csv)$/i, '');
                                 const item = document.createElement('div');
                                 item.className = 'search-result-item';
                                 
@@ -956,7 +956,7 @@
                 item.dataset.filename = filename;
                 
                 // .docx 등 확장자 제거하여 예쁘게 표시
-                const displayName = filename.replace(/\.(docx|pdf)$/i, '');
+                const displayName = filename.replace(/\.(docx|pdf|csv)$/i, '');
                 const option = document.createElement('option');
                 option.value = filename;
                 option.textContent = displayName;
@@ -999,6 +999,96 @@
             });
         }
 
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function parseCsvRows(text) {
+            const rows = [];
+            let row = [];
+            let field = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        field += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                    continue;
+                }
+
+                if (!inQuotes && char === ',') {
+                    row.push(field.trim());
+                    field = '';
+                    continue;
+                }
+
+                if (!inQuotes && (char === '\n' || char === '\r')) {
+                    if (char === '\r' && nextChar === '\n') i++;
+                    row.push(field.trim());
+                    field = '';
+
+                    if (row.some(cell => cell !== '')) {
+                        rows.push(row);
+                    }
+                    row = [];
+                    continue;
+                }
+
+                field += char;
+            }
+
+            row.push(field.trim());
+            if (row.some(cell => cell !== '')) {
+                rows.push(row);
+            }
+
+            return rows;
+        }
+
+        function decodeCsvText(arrayBuffer) {
+            const encodingCandidates = ['utf-8', 'euc-kr', 'windows-1252'];
+            for (const encoding of encodingCandidates) {
+                try {
+                    return new TextDecoder(encoding, { fatal: true }).decode(arrayBuffer);
+                } catch (_) {
+                    // Try next encoding
+                }
+            }
+            return new TextDecoder('utf-8').decode(arrayBuffer);
+        }
+
+        function renderCsvAsTable(csvText) {
+            const rows = parseCsvRows(csvText);
+            if (rows.length === 0) {
+                return '<div class="error-message">CSV 내용이 비어 있습니다.</div>';
+            }
+
+            const headerCells = rows[0].map(cell => `<th>${escapeHtml(cell)}</th>`).join('');
+            const bodyRows = rows.slice(1).map((row) => {
+                const cells = row.map(cell => `<td>${escapeHtml(cell)}</td>`).join('');
+                return `<tr>${cells}</tr>`;
+            }).join('');
+
+            return `
+                <table>
+                    <thead><tr>${headerCells}</tr></thead>
+                    <tbody>${bodyRows}</tbody>
+                </table>
+            `;
+        }
+
         function loadDocument(filename, displayName) {
             const documentView = document.getElementById('document-view');
             const titleEl = document.getElementById('current-title');
@@ -1027,9 +1117,17 @@
                 fetch(`company-regulation/${encodeURIComponent(filename)}`)
                     .then(response => {
                         if (!response.ok) throw new Error("파일을 불러오지 못했습니다.");
-                        return response.arrayBuffer(); // DOCX는 바이너리 데이터
+                        return response.arrayBuffer();
                     })
                     .then(arrayBuffer => {
+                        const ext = filename.split('.').pop().toLowerCase();
+                        if (ext === 'csv') {
+                            return {
+                                value: renderCsvAsTable(decodeCsvText(arrayBuffer)),
+                                messages: []
+                            };
+                        }
+
                         // Mammoth.js를 이용해 DOCX -> HTML 변환
                         return mammoth.convertToHtml({arrayBuffer: arrayBuffer});
                     })

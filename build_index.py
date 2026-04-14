@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import csv
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -28,6 +29,26 @@ def extract_text_from_docx(file_path):
         print(f"[{file_path}] DOCX 파싱 오류: {e}")
         return ""
 
+def extract_text_from_csv(file_path):
+    """CSV 파일을 읽어 검색 인덱스용 텍스트를 반환"""
+    encodings = ["utf-8-sig", "utf-8", "cp949", "euc-kr"]
+    for encoding in encodings:
+        try:
+            lines = []
+            with open(file_path, "r", encoding=encoding, newline="") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    lines.append(" ".join(cell.strip() for cell in row if cell is not None))
+            return "\n".join(lines)
+        except UnicodeDecodeError:
+            continue
+        except Exception as e:
+            print(f"[{file_path}] CSV 파싱 오류: {e}")
+            return ""
+
+    print(f"[{file_path}] CSV 인코딩을 해석할 수 없습니다.")
+    return ""
+
 def build_index():
     print("사규 파일을 읽어 검색 인덱스를 빌드합니다...")
     
@@ -35,7 +56,10 @@ def build_index():
         print(f"[{REGULATION_DIR}] 폴더를 찾을 수 없습니다.")
         return
 
-    files = [f for f in os.listdir(REGULATION_DIR) if f.endswith('.docx')]
+    files = [
+        f for f in os.listdir(REGULATION_DIR)
+        if f.lower().endswith((".docx", ".csv")) and not f.startswith("~$")
+    ]
     files = sorted(files, key=sort_key)
     
     index_data = {
@@ -46,7 +70,13 @@ def build_index():
     for filename in files:
         index_data["files"].append(filename)
         file_path = os.path.join(REGULATION_DIR, filename)
-        content = extract_text_from_docx(file_path)
+        ext = os.path.splitext(filename)[1].lower()
+        if ext == ".docx":
+            content = extract_text_from_docx(file_path)
+        elif ext == ".csv":
+            content = extract_text_from_csv(file_path)
+        else:
+            content = ""
         index_data["content_map"][filename] = content
         print(f" - 처리 완료: {filename} ({len(content)} 글자)")
         
