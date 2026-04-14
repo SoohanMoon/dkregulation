@@ -129,6 +129,38 @@
             opacity: 1;
         }
 
+        .file-group-toggle {
+            justify-content: space-between;
+        }
+
+        .file-group-toggle .group-chevron {
+            transition: transform 0.2s ease;
+            opacity: 0.8;
+        }
+
+        .file-group-toggle.expanded .group-chevron {
+            transform: rotate(90deg);
+            opacity: 1;
+        }
+
+        .file-sublist {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 4px;
+            padding-left: 14px;
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .file-sublist.open {
+            display: flex;
+        }
+
+        .file-sub-item {
+            padding: 10px 12px;
+            font-size: 0.9rem;
+        }
+
         /* Main Content */
         .main-content {
             flex: 1;
@@ -924,10 +956,54 @@
         }
 
         // 2. 좌측 메뉴 렌더링
+        function isDelegationRuleFile(filename) {
+            return /^13-\d+\./.test(filename);
+        }
+
+        function getDisplayName(filename) {
+            return filename.replace(/\.(docx|pdf|csv)$/i, '');
+        }
+
+        function getMenuEntries(files) {
+            const normalEntries = [];
+            const delegationChildren = [];
+
+            files.forEach((filename) => {
+                if (isDelegationRuleFile(filename)) {
+                    delegationChildren.push(filename);
+                } else {
+                    normalEntries.push(filename);
+                }
+            });
+
+            if (delegationChildren.length > 0) {
+                normalEntries.push({
+                    type: 'delegation-group',
+                    label: '13. 위임전결규정',
+                    children: delegationChildren
+                });
+            }
+
+            return normalEntries;
+        }
+
         function setActiveFile(filename) {
-            document.querySelectorAll('.file-item').forEach((el) => {
+            document.querySelectorAll('.file-item[data-filename]').forEach((el) => {
                 el.classList.toggle('active', el.dataset.filename === filename);
             });
+
+            const activeItem = Array.from(document.querySelectorAll('.file-item[data-filename]'))
+                .find((el) => el.dataset.filename === filename);
+            if (!activeItem) return;
+
+            const parentSublist = activeItem.closest('.file-sublist');
+            if (parentSublist) {
+                parentSublist.classList.add('open');
+                const toggle = parentSublist.previousElementSibling;
+                if (toggle && toggle.classList.contains('file-group-toggle')) {
+                    toggle.classList.add('expanded');
+                }
+            }
         }
 
         function syncMobileFileSelect(filename) {
@@ -941,6 +1017,7 @@
             const mobileSelect = document.getElementById('mobile-file-select');
             listContainer.innerHTML = '';
             mobileSelect.innerHTML = '<option value="">메뉴에서 사규를 선택하세요</option>';
+            const menuEntries = getMenuEntries(files);
 
             mobileSelect.onchange = () => {
                 const selectedFile = mobileSelect.value;
@@ -950,17 +1027,10 @@
                 loadDocument(selectedFile, selectedName);
             };
 
-            files.forEach((filename) => {
+            const appendFileItem = (filename, displayName, parentElement, isChild = false) => {
                 const item = document.createElement('div');
-                item.className = 'file-item';
+                item.className = isChild ? 'file-item file-sub-item' : 'file-item';
                 item.dataset.filename = filename;
-                
-                // .docx 등 확장자 제거하여 예쁘게 표시
-                const displayName = filename.replace(/\.(docx|pdf|csv)$/i, '');
-                const option = document.createElement('option');
-                option.value = filename;
-                option.textContent = displayName;
-                mobileSelect.appendChild(option);
 
                 item.innerHTML = `
                     <svg viewBox="0 0 24 24">
@@ -978,7 +1048,60 @@
                     loadDocument(filename, displayName);
                 });
 
-                listContainer.appendChild(item);
+                parentElement.appendChild(item);
+            };
+
+            menuEntries.forEach((entry) => {
+                if (typeof entry === 'string') {
+                    const displayName = getDisplayName(entry);
+                    const option = document.createElement('option');
+                    option.value = entry;
+                    option.textContent = displayName;
+                    mobileSelect.appendChild(option);
+                    appendFileItem(entry, displayName, listContainer);
+                    return;
+                }
+
+                if (entry.type === 'delegation-group') {
+                    const groupToggle = document.createElement('div');
+                    groupToggle.className = 'file-item file-group-toggle';
+                    groupToggle.innerHTML = `
+                        <span style="display:flex; align-items:center; gap:12px; min-width:0;">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${entry.label}</span>
+                        </span>
+                        <span class="group-chevron">▶</span>
+                    `;
+
+                    const subList = document.createElement('div');
+                    subList.className = 'file-sublist';
+
+                    groupToggle.addEventListener('click', () => {
+                        const shouldOpen = !subList.classList.contains('open');
+                        subList.classList.toggle('open', shouldOpen);
+                        groupToggle.classList.toggle('expanded', shouldOpen);
+                    });
+
+                    const groupOpt = document.createElement('optgroup');
+                    groupOpt.label = entry.label;
+
+                    entry.children.forEach((filename) => {
+                        const displayName = getDisplayName(filename);
+                        appendFileItem(filename, displayName, subList, true);
+
+                        const option = document.createElement('option');
+                        option.value = filename;
+                        option.textContent = displayName;
+                        groupOpt.appendChild(option);
+                    });
+
+                    mobileSelect.appendChild(groupOpt);
+                    listContainer.appendChild(groupToggle);
+                    listContainer.appendChild(subList);
+                }
             });
         }
 
