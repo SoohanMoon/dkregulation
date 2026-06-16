@@ -1,0 +1,287 @@
+{% extends "performance/base.html" %}
+
+{% block title %}중간실적 등록 - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="user-info">
+  <div class="row">
+    <div class="col-md-3 col-6 mb-2 mb-md-0">
+      <h6><i class="fas fa-user me-2"></i>이름</h6>
+      <p>{{ user.name }}</p>
+    </div>
+    <div class="col-md-3 col-6 mb-2 mb-md-0">
+      <h6><i class="fas fa-building me-2"></i>소속</h6>
+      <p>{{ user.team }}</p>
+    </div>
+    <div class="col-md-3 col-6">
+      <h6><i class="fas fa-id-badge me-2"></i>직급</h6>
+      <p>{{ user.grade }}</p>
+    </div>
+    <div class="col-md-3 col-6 text-md-end">
+      <h6><i class="fas fa-flag me-2"></i>상태</h6>
+      <span class="status-badge status-{{ status if status != 'none' else 'none' }}" id="statusBadge">
+        {% if status == 'submitted' %}최종 제출 완료{% elif status == 'draft' %}임시저장{% else %}미작성{% endif %}
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0"><i class="fas fa-edit me-2"></i>중간실적 등록 (최대 {{ max_items }}개)</h5>
+        <span class="badge bg-light text-primary" id="itemCountBadge">작성 과제: 0/{{ max_items }}</span>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning d-none" id="lockedNotice">
+          <h6 class="mb-1"><i class="fas fa-lock me-2"></i>최종 제출 완료</h6>
+          <p class="mb-0 small">최종 제출이 완료되어 수정할 수 없습니다.</p>
+        </div>
+
+        <div id="itemsContainer"></div>
+
+        <div class="d-flex gap-2 flex-wrap mt-2">
+          <button type="button" class="btn btn-outline-primary" id="addBtn">
+            <i class="fas fa-plus me-1"></i>과제 추가
+          </button>
+          <button type="button" class="btn btn-warning" id="saveBtn">
+            <i class="fas fa-save me-1"></i>임시저장
+          </button>
+          <button type="button" class="btn btn-primary" id="submitBtn">
+            <i class="fas fa-paper-plane me-1"></i>최종 제출
+          </button>
+        </div>
+        <div class="mt-3" id="msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>작성 안내</h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <h6><i class="fas fa-lightbulb me-2"></i>작성 방법</h6>
+          <ul class="mb-0 small">
+            <li>팀별 과제명을 선택하거나 직접 작성할 수 있습니다</li>
+            <li>최대 {{ max_items }}개까지 과제를 추가할 수 있습니다</li>
+            <li>임시저장 후 나중에 이어서 작성 가능합니다</li>
+          </ul>
+        </div>
+        <div class="alert alert-warning mb-0">
+          <h6><i class="fas fa-exclamation-triangle me-2"></i>중요 안내</h6>
+          <ul class="mb-0 small">
+            <li>최종 제출 후에는 변경이 불가능합니다</li>
+            <li>과제명과 중간실적을 모두 입력해야 제출됩니다</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const PROJECTS = {{ projects | tojson }};
+  const MAX_ITEMS = {{ max_items }};
+  const INITIAL_STATUS = "{{ status }}";
+  let currentStatus = INITIAL_STATUS;
+
+  const itemsContainer = document.getElementById('itemsContainer');
+  const addBtn = document.getElementById('addBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  const msg = document.getElementById('msg');
+  const lockedNotice = document.getElementById('lockedNotice');
+  const statusBadge = document.getElementById('statusBadge');
+  const itemCountBadge = document.getElementById('itemCountBadge');
+
+  function isLocked() { return currentStatus === 'submitted'; }
+
+  function updateItemCount() {
+    const count = itemsContainer.querySelectorAll('.item-card').length;
+    itemCountBadge.textContent = `작성 과제: ${count}/${MAX_ITEMS}`;
+  }
+
+  function updateUI() {
+    const locked = isLocked();
+    addBtn.disabled = locked;
+    saveBtn.disabled = locked;
+    submitBtn.disabled = locked;
+    lockedNotice.classList.toggle('d-none', !locked);
+    document.querySelectorAll('.remove-btn').forEach(btn => btn.disabled = locked);
+    document.querySelectorAll('.item-card select, .item-card input, .item-card textarea').forEach(el => {
+      el.disabled = locked;
+    });
+    updateItemCount();
+  }
+
+  function updateStatusBadge(status) {
+    currentStatus = status;
+    const map = {
+      none: { text: '미작성', cls: 'status-none' },
+      draft: { text: '임시저장', cls: 'status-draft' },
+      submitted: { text: '최종 제출 완료', cls: 'status-submitted' },
+    };
+    const info = map[status] || map.none;
+    statusBadge.textContent = info.text;
+    statusBadge.className = 'status-badge ' + info.cls;
+    updateUI();
+  }
+
+  function buildProjectOptions() {
+    let html = '<option value="">과제명 선택</option>';
+    PROJECTS.forEach(p => {
+      html += `<option value="${p.replace(/"/g, '&quot;')}">${p}</option>`;
+    });
+    html += '<option value="__custom__">과제명을 직접 작성</option>';
+    return html;
+  }
+
+  function createItemCard(data = {}) {
+    const idx = itemsContainer.querySelectorAll('.item-card').length + 1;
+    const card = document.createElement('div');
+    card.className = 'card item-card';
+    card.innerHTML = `
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="text-white mb-0"><i class="fas fa-list-ol me-2"></i>과제 ${idx}</h6>
+        <button type="button" class="btn btn-sm btn-outline-light remove-btn">
+          <i class="fas fa-trash-alt me-1"></i>삭제
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label fw-bold">① 과제명</label>
+          <select class="form-select project-select">${buildProjectOptions()}</select>
+        </div>
+        <div class="mb-3 custom-input d-none">
+          <input type="text" class="form-control custom-name" placeholder="과제명을 직접 입력하세요">
+        </div>
+        <div class="mb-0">
+          <label class="form-label fw-bold">② 중간실적</label>
+          <textarea class="form-control performance-text" rows="4" placeholder="중간실적을 입력하세요"></textarea>
+        </div>
+      </div>
+    `;
+
+    const select = card.querySelector('.project-select');
+    const customDiv = card.querySelector('.custom-input');
+    const customInput = card.querySelector('.custom-name');
+    const perfText = card.querySelector('.performance-text');
+
+    select.addEventListener('change', () => {
+      customDiv.classList.toggle('d-none', select.value !== '__custom__');
+      if (select.value !== '__custom__') customInput.value = '';
+    });
+
+    card.querySelector('.remove-btn').addEventListener('click', () => {
+      if (isLocked()) return;
+      card.remove();
+      renumberItems();
+      updateItemCount();
+    });
+
+    if (data.is_custom) {
+      select.value = '__custom__';
+      customDiv.classList.remove('d-none');
+      customInput.value = data.project_name || '';
+    } else if (data.project_name) {
+      if (PROJECTS.includes(data.project_name)) {
+        select.value = data.project_name;
+      } else {
+        select.value = '__custom__';
+        customDiv.classList.remove('d-none');
+        customInput.value = data.project_name;
+      }
+    }
+    perfText.value = data.performance || '';
+
+    itemsContainer.appendChild(card);
+    renumberItems();
+    updateUI();
+  }
+
+  function renumberItems() {
+    itemsContainer.querySelectorAll('.item-card').forEach((card, i) => {
+      card.querySelector('h6').innerHTML = `<i class="fas fa-list-ol me-2"></i>과제 ${i + 1}`;
+    });
+  }
+
+  function collectItems() {
+    const items = [];
+    itemsContainer.querySelectorAll('.item-card').forEach(card => {
+      const select = card.querySelector('.project-select');
+      const customInput = card.querySelector('.custom-name');
+      const perfText = card.querySelector('.performance-text');
+      let projectName = '';
+      let isCustom = false;
+      if (select.value === '__custom__') {
+        projectName = customInput.value.trim();
+        isCustom = true;
+      } else {
+        projectName = select.value.trim();
+      }
+      items.push({ project_name: projectName, is_custom: isCustom, performance: perfText.value.trim() });
+    });
+    return items;
+  }
+
+  function showMsg(text, ok) {
+    msg.innerHTML = `<div class="${ok ? 'msg-ok' : 'msg-err'}"><i class="fas fa-${ok ? 'check-circle' : 'exclamation-circle'} me-1"></i>${text}</div>`;
+  }
+
+  addBtn.addEventListener('click', () => {
+    if (itemsContainer.querySelectorAll('.item-card').length >= MAX_ITEMS) {
+      showMsg(`과제는 최대 ${MAX_ITEMS}개까지 추가할 수 있습니다.`, false);
+      return;
+    }
+    createItemCard();
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const res = await fetch('{{ url_for("performance.api_save") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: collectItems() }),
+    });
+    const data = await res.json();
+    showMsg(data.message, data.success);
+    if (data.success) updateStatusBadge('draft');
+  });
+
+  submitBtn.addEventListener('click', async () => {
+    const items = collectItems().filter(i => i.project_name || i.performance);
+    if (!items.length) {
+      showMsg('제출할 과제를 1개 이상 추가해 주세요.', false);
+      return;
+    }
+    if (!confirm('최종 제출하시겠습니까? 제출 후에는 수정할 수 없습니다.')) return;
+    const res = await fetch('{{ url_for("performance.api_submit") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+    const data = await res.json();
+    showMsg(data.message, data.success);
+    if (data.success) updateStatusBadge('submitted');
+  });
+
+  async function loadData() {
+    const res = await fetch('{{ url_for("performance.api_my_performance") }}');
+    const data = await res.json();
+    if (!data.success) return;
+    updateStatusBadge(data.status === 'none' ? 'none' : data.status);
+    if (data.items && data.items.length) {
+      data.items.forEach(item => createItemCard(item));
+    } else if (!isLocked()) {
+      createItemCard();
+    }
+  }
+
+  loadData();
+</script>
+{% endblock %}

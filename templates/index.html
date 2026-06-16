@@ -87,13 +87,14 @@
 <body>
   <div class="container">
     <h1>동국홀딩스 2026년 팀별 목표등록</h1>
-    <p class="subtitle">팀을 선택하세요</p>
+    <p class="subtitle">팀을 선택하세요 · <a href="{{ url_for('performance.login_page') }}" style="color:#2563eb;text-decoration:none;font-weight:600;">중간점검 시스템 바로가기</a></p>
     <div class="team-grid">
       {% for team in teams %}
       <a href="{{ url_for('team_goal_page', team_id=team.id) }}" class="team-btn">{{ team.name }}</a>
       {% endfor %}
     </div>
     <div class="admin-area">
+      <a href="{{ url_for('performance.login_page') }}" class="admin-btn" style="margin-right:0.4rem;">중간점검</a>
       <a href="{{ url_for('admin_page') }}" class="admin-btn">관리자</a>
     </div>
   </div>

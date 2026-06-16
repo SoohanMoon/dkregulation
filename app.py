@@ -3,6 +3,7 @@
 동국홀딩스 2026년 팀별 목표등록 시스템 - Flask 웹 앱
 """
 import json
+import os
 from io import BytesIO
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 
@@ -13,10 +14,18 @@ from objectmanagement import (
     GOALS_JSON,
     EXCEL_TEAM_TO_ID,
 )
+from midtermperformance import performance_bp
 
 app = Flask(__name__)
-app.secret_key = "dgh_2026_admin_secret"
+app.register_blueprint(performance_bp)
+app.secret_key = os.environ.get("SECRET_KEY", "dgh_2026_admin_secret")
 ID_TO_TEAM_NAME = {t["id"]: t["name"] for t in TEAMS}
+
+
+@app.route("/health")
+def health():
+    """Railway 헬스체크용"""
+    return jsonify({"status": "ok"}), 200
 
 
 def load_teammates():
@@ -271,4 +280,6 @@ def api_admin_goals_reset():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5001))
+    debug = os.environ.get("FLASK_DEBUG", "true").lower() == "true"
+    app.run(host="0.0.0.0", port=port, debug=debug)

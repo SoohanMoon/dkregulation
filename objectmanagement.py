@@ -3,12 +3,14 @@
 동국홀딩스 2026 팀별 목표등록 - 목표/팀 데이터 관리
 팀 목록, Excel 경로, 목표 저장 경로 정의.
 """
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR))
 TEAMMATE_XLSX = BASE_DIR / "teammate(2).xlsx"
 YEAROBJECT_XLSX = BASE_DIR / "yearobject.xlsx"
-GOALS_JSON = BASE_DIR / "goals.json"
+GOALS_JSON = DATA_DIR / "goals.json"
 
 # 팀 목록: id(URL/API용), name(화면 표시명)
 TEAMS = [

@@ -6,6 +6,7 @@ venv/
 
 # Local runtime data
 goals.json
+중간점검/performance_data.json
 
 # Local downloaded tools
 railway-cli/
