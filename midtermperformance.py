@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+import bcrypt
 import pandas as pd
 from flask import (
     Blueprint,
@@ -46,6 +47,24 @@ def _normalize_team(team: str) -> str:
     return team
 
 
+def _is_bcrypt_hash(value: str) -> bool:
+    return (value or "").startswith(("$2a$", "$2b$", "$2y$"))
+
+
+def verify_password(plain: str, stored: str) -> bool:
+    """평문 비밀번호와 저장값(bcrypt 해시) 비교"""
+    if not plain or not stored:
+        return False
+    if _is_bcrypt_hash(stored):
+        return bcrypt.checkpw(plain.encode("utf-8"), stored.encode("utf-8"))
+    return plain == stored
+
+
+def _user_for_session(user: dict) -> dict:
+    """세션/API용 사용자 정보 (비밀번호 해시 제외)"""
+    return {k: v for k, v in user.items() if k != "pw_hash"}
+
+
 def load_users():
     """backdata_performance.csv에서 사용자 목록 로드"""
     global _users_cache
@@ -60,7 +79,7 @@ def load_users():
         for _, row in df.iterrows():
             users.append({
                 "id": str(row.get("ID", "")).strip(),
-                "pw": str(row.get("PW", "")).strip(),
+                "pw_hash": str(row.get("PW", "")).strip(),
                 "name": str(row.get("name", "")).strip(),
                 "team": str(row.get("team", "")).strip(),
                 "grade": str(row.get("grade", "")).strip(),
@@ -104,8 +123,8 @@ def get_user_by_credentials(user_id: str, password: str):
     user_id = (user_id or "").strip()
     password = (password or "").strip()
     for user in load_users():
-        if user["id"] == user_id and user["pw"] == password:
-            return user
+        if user["id"] == user_id and verify_password(password, user["pw_hash"]):
+            return _user_for_session(user)
     return None
 
 
@@ -123,7 +142,7 @@ def get_team_members(team: str, position=None):
             continue
         if position and user["position"] != position:
             continue
-        members.append(user)
+        members.append(_user_for_session(user))
     return members
 
 
