@@ -15,9 +15,11 @@ from objectmanagement import (
     EXCEL_TEAM_TO_ID,
 )
 from midtermperformance import performance_bp
+from midtermperformance_abroad import performance_abroad_bp
 
 app = Flask(__name__)
 app.register_blueprint(performance_bp)
+app.register_blueprint(performance_abroad_bp)
 app.secret_key = os.environ.get("SECRET_KEY", "dgh_2026_admin_secret")
 ID_TO_TEAM_NAME = {t["id"]: t["name"] for t in TEAMS}
 

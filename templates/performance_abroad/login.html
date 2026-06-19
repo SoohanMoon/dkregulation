@@ -1,0 +1,102 @@
+{% extends "performance_abroad/base.html" %}
+
+{% block title %}로그인 - 동국홀딩스 해외법인 인사평가 시스템{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header text-center">
+        <h2 class="mb-0">
+          <i class="fas fa-globe me-2"></i>동국홀딩스 해외법인 인사평가 시스템
+        </h2>
+        <p class="mb-0 mt-2" style="color: rgba(255,255,255,0.9);">2026년 해외법인 중간점검</p>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" action="{{ url_for('performance_abroad.login') }}" id="loginForm">
+          <input type="hidden" name="mode" id="modeInput" value="register">
+
+          <p class="fw-bold mb-3"><i class="fas fa-users me-2" style="color: var(--dk-blue);"></i>접속 유형 선택</p>
+          <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+              <div class="card evaluation-type-card h-100 selected" data-mode="register">
+                <div class="card-body text-center">
+                  <i class="fas fa-edit fa-2x mb-2" style="color: var(--dk-blue);"></i>
+                  <h6 class="fw-bold mb-1">실적등록</h6>
+                  <small class="text-muted">팀원 전용</small>
+                  <input type="radio" name="mode_radio" value="register" class="d-none" checked>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="card evaluation-type-card h-100" data-mode="inquiry">
+                <div class="card-body text-center">
+                  <i class="fas fa-search fa-2x mb-2" style="color: var(--dk-blue);"></i>
+                  <h6 class="fw-bold mb-1">실적조회</h6>
+                  <small class="text-muted">법인장 전용</small>
+                  <input type="radio" name="mode_radio" value="inquiry" class="d-none">
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 mb-3">
+              <div class="card evaluation-type-card h-100" data-mode="admin">
+                <div class="card-body text-center">
+                  <i class="fas fa-user-cog fa-2x mb-2" style="color: var(--dk-blue);"></i>
+                  <h6 class="fw-bold mb-1">관리자</h6>
+                  <small class="text-muted">관리자 전용</small>
+                  <input type="radio" name="mode_radio" value="admin" class="d-none">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row justify-content-center">
+            <div class="col-md-8">
+              <div class="mb-3">
+                <label for="user_id" class="form-label fw-bold">아이디</label>
+                <input type="text" class="form-control" id="user_id" name="user_id" required autofocus>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label fw-bold">비밀번호</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+              </div>
+              {% if error %}
+              <div class="alert alert-warning py-2 mb-3">
+                <i class="fas fa-exclamation-triangle me-1"></i>{{ error }}
+              </div>
+              {% endif %}
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-sign-in-alt me-1"></i>로그인
+                </button>
+              </div>
+              <div class="text-center">
+                <a href="/" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-arrow-left me-1"></i>메인으로 돌아가기
+                </a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const modeInput = document.getElementById('modeInput');
+  const cards = document.querySelectorAll('.evaluation-type-card');
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      const radio = card.querySelector('input[type="radio"]');
+      radio.checked = true;
+      modeInput.value = radio.value;
+    });
+  });
+</script>
+{% endblock %}

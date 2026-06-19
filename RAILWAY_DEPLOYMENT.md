@@ -1,6 +1,6 @@
 # Railway 배포 가이드 — 동국홀딩스 2026 평가시스템
 
-목표등록 + **중간점검** 시스템을 Railway에 배포하는 방법입니다.
+목표등록 + **중간점검**(국내·해외법인) 시스템을 Railway에 배포하는 방법입니다.
 
 ## 사전 준비
 
@@ -8,9 +8,12 @@
 - GitHub 저장소: `https://github.com/SoohanMoon/Pdata`
 - **중간점검 관련 파일이 GitHub에 푸시되어 있어야 합니다**
   - `midtermperformance.py`
+  - `midtermperformance_abroad.py`
   - `templates/performance/`
+  - `templates/performance_abroad/`
   - `중간점검/backdata_performance.csv`
   - `중간점검/project_nm.csv`
+  - `중간점검(해외)/backdata_midtermperformance_abroad - 시트1.csv`
 
 ## 1단계: GitHub에 최신 코드 푸시
 
@@ -49,7 +52,7 @@ Railway 서비스 → **Variables** 탭에서 아래를 추가합니다.
 ## 4단계: 데이터 영속성 (볼륨) — 권장
 
 Railway는 기본적으로 **재배포 시 파일이 초기화**됩니다.  
-목표(`goals.json`)와 중간실적(`performance_data.json`)을 유지하려면 **Volume**을 추가하세요.
+목표(`goals.json`)와 중간실적(`performance_data.json`, `performance_data_abroad.json`)을 유지하려면 **Volume**을 추가하세요.
 
 1. Railway 서비스 → **Volumes** → **Add Volume**
 2. 마운트 경로: `/data`
@@ -63,16 +66,18 @@ Railway는 기본적으로 **재배포 시 파일이 초기화**됩니다.
 | 화면 | URL |
 |------|-----|
 | 메인 (목표등록) | `https://<도메인>/` |
-| **중간점검 로그인** | `https://<도메인>/midterm/` |
+| **중간점검 로그인 (국내)** | `https://<도메인>/midterm/` |
+| **중간점검 로그인 (해외법인)** | `https://<도메인>/midterm/abroad/` |
 | 헬스체크 | `https://<도메인>/health` |
 
 ## 배포 후 점검 체크리스트
 
 - [ ] `/health` → `{"status":"ok"}` 응답
 - [ ] `/` 메인 페이지 로드
-- [ ] `/midterm/` 중간점검 로그인 화면 로드
+- [ ] `/midterm/` 국내 중간점검 로그인 화면 로드
+- [ ] `/midterm/abroad/` 해외법인 중간점검 로그인 화면 로드
 - [ ] 팀원 계정으로 실적등록 테스트
-- [ ] 팀장 계정으로 실적조회 테스트
+- [ ] 팀장/법인장 계정으로 실적조회 테스트
 - [ ] 관리자(ID: `11210110`) 로그인 테스트
 - [ ] 재배포 후에도 등록 데이터 유지 (볼륨 설정 시)
 
